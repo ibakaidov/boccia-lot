@@ -32,9 +32,7 @@
           </thead>
           <tbody>
             <tr
-              v-for="item in rows.sort((a, b) =>
-                a.ranking < b.ranking ? 1 : -1
-              )"
+              v-for="item in rows"
               :key="item.id"
             >
               <td>{{ item.id }}</td>
@@ -77,7 +75,13 @@ export default class HelloWorld extends Vue {
   loter = new Loter();
   loted?: (obj | null)[][] | null = null;
   async open() {
-    this.rows = await ipcRenderer.invoke("open");
+     ipcRenderer.invoke("open")
+     .then((rows:obj[])=>{
+      this.rows = rows.sort((a, b) =>
+                a.ranking < b.ranking ? 1 : -1
+              )
+      
+     });
     this.loted = null;
   }
   lot() {
