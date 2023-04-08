@@ -2,152 +2,91 @@
   <v-container>
     <v-row class="text-center">
       <v-col cols="12">
-        <v-img
-          :src="require('../assets/logo.svg')"
-          class="my-3"
-          contain
-          height="200"
-        />
-      </v-col>
-
-      <v-col class="mb-4">
-        <h1 class="display-2 font-weight-bold mb-3">
-          Welcome to Vuetify 3 Beta
-        </h1>
-
-
-        <p class="subheading font-weight-regular">
-          For help and collaboration with other Vuetify developers,
-          <br>please join our online
-          <a
-            href="https://community.vuetifyjs.com"
-            target="_blank"
-          >Discord Community</a>
-        </p>
-      </v-col>
-
-      <v-col
-        class="mb-5"
-        cols="12"
-      >
-        <h2 class="headline font-weight-bold mb-5">
-          What's next?
-        </h2>
-
-        <v-row justify="center">
-          <a
-            v-for="(next, i) in whatsNext"
-            :key="i"
-            :href="next.href"
-            class="subheading mx-3"
-            target="_blank"
-          >
-            {{ next.text }}
-          </a>
+        <v-row>
+          <v-col cols="3">
+            <v-btn block color="success" @click="openTemplate">Открыть шаблон</v-btn>
+          </v-col>
+          <v-col cols="3">
+            <v-btn block color="success" @click="open">Выбрать файл</v-btn>
+          </v-col>
+          <v-col cols="3">
+            <v-text-field
+              v-model="groupsCount"
+              label="Количество групп"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="3">
+            <v-btn block color="success" @click="lot">Жеребнуть</v-btn>
+          </v-col>
+          <v-col></v-col>
         </v-row>
       </v-col>
-
-      <v-col
-        class="mb-5"
-        cols="12"
-      >
-        <h2 class="headline font-weight-bold mb-5">
-          Important Links
-        </h2>
-
-        <v-row justify="center">
-          <a
-            v-for="(link, i) in importantLinks"
-            :key="i"
-            :href="link.href"
-            class="subheading mx-3"
-            target="_blank"
-          >
-            {{ link.text }}
-          </a>
-        </v-row>
+      <v-col v-if="!loted && rows">
+        <v-table density="compact">
+          <thead>
+            <tr>
+              <th class="text-left">id</th>
+              <th class="text-left">ФИО</th>
+              <th class="text-left">очки</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="item in rows.sort((a, b) =>
+                a.ranking < b.ranking ? 1 : -1
+              )"
+              :key="item.id"
+            >
+              <td>{{ item.id }}</td>
+              <td>{{ item.name }}</td>
+              <td>{{ item.ranking }}</td>
+            </tr>
+          </tbody>
+        </v-table>
       </v-col>
-
-      <v-col
-        class="mb-5"
-        cols="12"
-      >
-        <h2 class="headline font-weight-bold mb-5">
-          Ecosystem
-        </h2>
-
-        <v-row justify="center">
-          <a
-            v-for="(eco, i) in ecosystem"
-            :key="i"
-            :href="eco.href"
-            class="subheading mx-3"
-            target="_blank"
-          >
-            {{ eco.text }}
-          </a>
-        </v-row>
+      <v-col v-if="loted">
+        <v-layout>
+          <v-card xs4 v-for="(group, i) in loted" :key="i">
+            <v-card-title primary-title> Группа {{ i + 1 }} </v-card-title>
+            <v-card-text>
+              <v-table>
+                <tbody>
+                  <tr v-for="(item, j) in group" :key="item.id">
+                    <td>{{ j + 1 }}</td>
+                    <td>{{ item.name }}</td>
+                  </tr>
+                </tbody>
+              </v-table>
+            </v-card-text>
+          </v-card>
+        </v-layout>
       </v-col>
     </v-row>
   </v-container>
 </template>
 
-<script lang='ts'>
-import { defineComponent } from 'vue'
+<script lang="ts">
 
+import { obj } from "@/lib/csv";
+import { ipcRenderer, shell } from "electron";
+import { Vue } from "vue-class-component";
+import { Loter } from "@/lib/Loter";
+export default class HelloWorld extends Vue {
+  rows: obj[] | null = null;
+  groupsCount = 3;
+  loter = new Loter();
+  loted?: (obj | null)[][] | null = null;
+  async open() {
+    this.rows = await ipcRenderer.invoke("open");
+    this.loted = null;
+  }
+  lot() {
+    if (!this.rows) return;
+    this.loted = this.loter.lot(this.groupsCount, this.rows);
+  }
 
-export default defineComponent({
-  name: 'HelloWorld',
-
-  data () {
-    return {
-      ecosystem: [
-        {
-          text: 'vuetify-loader',
-          href: 'https://github.com/vuetifyjs/vuetify-loader/tree/next',
-        },
-        {
-          text: 'github',
-          href: 'https://github.com/vuetifyjs/vuetify/tree/next',
-        },
-        {
-          text: 'awesome-vuetify',
-          href: 'https://github.com/vuetifyjs/awesome-vuetify',
-        },
-      ],
-      importantLinks: [
-        {
-          text: 'Chat',
-          href: 'https://community.vuetifyjs.com',
-        },
-        {
-          text: 'Made with Vuetify',
-          href: 'https://madewithvuejs.com/vuetify',
-        },
-        {
-          text: 'Twitter',
-          href: 'https://twitter.com/vuetifyjs',
-        },
-        {
-          text: 'Articles',
-          href: 'https://medium.com/vuetify',
-        },
-      ],
-      whatsNext: [
-        {
-          text: 'Explore components',
-          href: 'https://vuetifyjs.com',
-        },
-        {
-          text: 'Roadmap',
-          href: 'https://vuetifyjs.com/en/introduction/roadmap/',
-        },
-        {
-          text: 'Frequently Asked Questions',
-          href: 'https://vuetifyjs.com/getting-started/frequently-asked-questions',
-        },
-      ],
-    }
-  },
-})
+  openTemplate(){
+    shell.openExternal("https://docs.google.com/spreadsheets/d/1TgFMoT4BXS2VwX92YPGI_EtvCq9OOo41D3ngC2-5-B8/edit?usp=sharing")
+  }
+}
 </script>
